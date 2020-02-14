@@ -18,6 +18,7 @@ package io.opentelemetry.trace;
 
 import com.google.errorprone.annotations.MustBeClosed;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.B3Header;
 import io.opentelemetry.context.propagation.BinaryFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
@@ -258,4 +259,6 @@ public interface Tracer {
    * @since 0.1.0
    */
   HttpTextFormat<SpanContext> getHttpTextFormat();
+
+  B3Header<SpanContext> getB3Format();
 }

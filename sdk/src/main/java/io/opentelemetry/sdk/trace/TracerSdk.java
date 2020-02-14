@@ -75,6 +75,11 @@ public final class TracerSdk implements Tracer {
     return HTTP_TEXT_FORMAT;
   }
 
+  /**@Override
+  *public HttpTextFormat<SpanContext> getHttpTextFormat() {
+  *  return HTTP_TEXT_FORMAT;
+  }*/
+
   /**
    * Returns the instrumentation library specified when creating the tracer using {@link
    * TracerSdkRegistry}.

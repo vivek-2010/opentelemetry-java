@@ -16,6 +16,7 @@
 
 package io.opentelemetry.opentracingshim;
 
+import io.opentelemetry.context.propagation.B3Header;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentracing.propagation.Binary;
 import io.opentracing.propagation.TextMapExtract;
@@ -56,6 +57,32 @@ final class Propagation extends BaseShimObject {
     return new SpanContextShim(telemetryInfo, context, distContext);
   }
 
+  public void injectB3Format(SpanContextShim contextShim, TextMapInject carrier) {
+    tracer()
+            .getB3Format()
+            .inject(contextShim.getSpanContext(), carrier, B3TextMapSetter.INSTANCE);
+    contextManager()
+            .getB3Format()
+            .inject(contextShim.getCorrelationContext(), carrier, B3TextMapSetter.INSTANCE);
+  }
+
+  @Nullable
+  public SpanContextShim extractB3Format(TextMapExtract carrier) {
+    Map<String, String> carrierMap = new HashMap<String, String>();
+    for (Map.Entry<String, String> entry : carrier) {
+      carrierMap.put(entry.getKey(), entry.getValue());
+    }
+
+    io.opentelemetry.trace.SpanContext context =
+            tracer().getB3Format().extract(carrierMap, B3TextMapGetter.INSTANCE);
+    io.opentelemetry.correlationcontext.CorrelationContext distContext =
+            contextManager().getB3Format().extract(carrierMap, B3TextMapGetter.INSTANCE);
+    if (!context.isValid()) {
+      return null;
+    }
+    return new SpanContextShim(telemetryInfo, context, distContext);
+  }
+
   static final class TextMapSetter implements HttpTextFormat.Setter<TextMapInject> {
     private TextMapSetter() {}
 
@@ -73,6 +100,30 @@ final class Propagation extends BaseShimObject {
     private TextMapGetter() {}
 
     public static final TextMapGetter INSTANCE = new TextMapGetter();
+
+    @Override
+    public String get(Map<String, String> carrier, String key) {
+      return carrier.get(key);
+    }
+  }
+
+  static final class B3TextMapSetter implements B3Header.Setter<TextMapInject> {
+    private B3TextMapSetter() {}
+
+    public static final B3TextMapSetter INSTANCE = new B3TextMapSetter();
+
+    @Override
+    public void set(TextMapInject carrier, String key, String value) {
+      carrier.put(key, value);
+    }
+  }
+
+  // We use Map<> instead of TextMap as we need to query a specified key, and iterating over
+  // *all* values per key-query *might* be a bad idea.
+  static final class B3TextMapGetter implements B3Header.Getter<Map<String, String>> {
+    private B3TextMapGetter() {}
+
+    public static final B3TextMapGetter INSTANCE = new B3TextMapGetter();
 
     @Override
     public String get(Map<String, String> carrier, String key) {
