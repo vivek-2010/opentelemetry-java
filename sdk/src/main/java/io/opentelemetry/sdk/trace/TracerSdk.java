@@ -17,6 +17,7 @@
 package io.opentelemetry.sdk.trace;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.B3HeaderFormat;
 import io.opentelemetry.context.propagation.BinaryFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
@@ -24,6 +25,7 @@ import io.opentelemetry.trace.DefaultTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.propagation.B3HeaderContext;
 import io.opentelemetry.trace.propagation.BinaryTraceContext;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
 import io.opentelemetry.trace.unsafe.ContextUtils;
@@ -32,6 +34,7 @@ import io.opentelemetry.trace.unsafe.ContextUtils;
 public final class TracerSdk implements Tracer {
   private static final BinaryFormat<SpanContext> BINARY_FORMAT = new BinaryTraceContext();
   private static final HttpTextFormat<SpanContext> HTTP_TEXT_FORMAT = new HttpTraceContext();
+  private static final B3HeaderFormat<SpanContext> B3_HEADER_FORMAT = new B3HeaderContext();
   private final TracerSharedState sharedState;
   private final InstrumentationLibraryInfo instrumentationLibraryInfo;
 
@@ -71,9 +74,10 @@ public final class TracerSdk implements Tracer {
   }
 
   @Override
-  public HttpTextFormat<SpanContext> getHttpTextFormat() {
-    return HTTP_TEXT_FORMAT;
-  }
+  public HttpTextFormat<SpanContext> getHttpTextFormat() { return HTTP_TEXT_FORMAT; }
+
+  @Override
+  public B3HeaderFormat<SpanContext> getB3Format() { return B3_HEADER_FORMAT; }
 
   /**@Override
   *public HttpTextFormat<SpanContext> getHttpTextFormat() {

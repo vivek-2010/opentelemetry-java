@@ -17,6 +17,7 @@
 package io.opentelemetry.correlationcontext;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.B3HeaderFormat;
 import io.opentelemetry.context.propagation.BinaryFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.correlationcontext.unsafe.ContextUtils;
@@ -38,6 +39,7 @@ public final class DefaultCorrelationContextManager implements CorrelationContex
   private static final BinaryFormat<CorrelationContext> BINARY_FORMAT = new NoopBinaryFormat();
   private static final HttpTextFormat<CorrelationContext> HTTP_TEXT_FORMAT =
       new NoopHttpTextFormat();
+  private static final B3HeaderFormat<CorrelationContext> B3_FORMAT = new NoopB3HeaderFormat();
 
   /**
    * Returns a {@code CorrelationContextManager} singleton that is the default implementation for
@@ -75,6 +77,9 @@ public final class DefaultCorrelationContextManager implements CorrelationContex
   public HttpTextFormat<CorrelationContext> getHttpTextFormat() {
     return HTTP_TEXT_FORMAT;
   }
+
+  @Override
+  public B3HeaderFormat<CorrelationContext> getB3Format() { return B3_FORMAT; }
 
   @Immutable
   private static final class NoopCorrelationContextBuilder implements CorrelationContext.Builder {
@@ -129,6 +134,28 @@ public final class DefaultCorrelationContextManager implements CorrelationContex
 
   @Immutable
   private static final class NoopHttpTextFormat implements HttpTextFormat<CorrelationContext> {
+    @Override
+    public List<String> fields() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public <C> void inject(CorrelationContext distContext, C carrier, Setter<C> setter) {
+      Utils.checkNotNull(distContext, "distContext");
+      Utils.checkNotNull(carrier, "carrier");
+      Utils.checkNotNull(setter, "setter");
+    }
+
+    @Override
+    public <C> CorrelationContext extract(C carrier, Getter<C> getter) {
+      Utils.checkNotNull(carrier, "carrier");
+      Utils.checkNotNull(getter, "getter");
+      return EmptyCorrelationContext.getInstance();
+    }
+  }
+
+  @Immutable
+  private static final class NoopB3HeaderFormat implements B3HeaderFormat<CorrelationContext> {
     @Override
     public List<String> fields() {
       return Collections.emptyList();

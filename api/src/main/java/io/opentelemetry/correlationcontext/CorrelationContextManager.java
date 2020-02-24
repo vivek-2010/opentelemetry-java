@@ -17,7 +17,7 @@
 package io.opentelemetry.correlationcontext;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.B3Header;
+import io.opentelemetry.context.propagation.B3HeaderFormat;
 import io.opentelemetry.context.propagation.BinaryFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import javax.annotation.concurrent.ThreadSafe;
@@ -154,5 +154,5 @@ public interface CorrelationContextManager {
    */
   HttpTextFormat<CorrelationContext> getHttpTextFormat();
 
-  B3Header<CorrelationContext> getB3Format();
+  B3HeaderFormat<CorrelationContext> getB3Format();
 }

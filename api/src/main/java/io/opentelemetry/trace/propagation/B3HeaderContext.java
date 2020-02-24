@@ -3,7 +3,7 @@ package io.opentelemetry.trace.propagation;
 import static io.opentelemetry.internal.Utils.checkArgument;
 import static io.opentelemetry.internal.Utils.checkNotNull;
 
-import io.opentelemetry.context.propagation.B3Header;
+import io.opentelemetry.context.propagation.B3HeaderFormat;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.SpanId;
 import io.opentelemetry.trace.TraceFlags;
@@ -13,13 +13,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
-import javax.annotation.concurrent.Immutable;
 
 /**
  * Implementation of the TraceContext propagation protocol. See <a
  * href=https://github.com/w3c/distributed-tracing>w3c/distributed-tracing</a>.
  */
-public class B3HeaderContext implements B3Header<SpanContext> {
+public class B3HeaderContext implements B3HeaderFormat<SpanContext> {
 
     private final String X_B3_TRACEID = "X-B3-TraceId";
     private final String X_B3_SPANID = "X-B3-SpanId";
@@ -43,10 +42,9 @@ public class B3HeaderContext implements B3Header<SpanContext> {
             TRACE_ID_OFFSET + TRACE_ID_HEX_SIZE + TRACEPARENT_DELIMITER_SIZE;
     private static final int TRACE_OPTION_OFFSET =
             SPAN_ID_OFFSET + SPAN_ID_HEX_SIZE + TRACEPARENT_DELIMITER_SIZE;
-    private static final int TRACEPARENT_HEADER_SIZE = TRACE_OPTION_OFFSET + TRACE_OPTION_HEX_SIZE;
     private static final int TRACESTATE_MAX_SIZE = 512;
     private static final int TRACESTATE_MAX_MEMBERS = 32;
-    private static final char TRACESTATE_KEY_VALUE_DELIMITER = '=';
+    private static final char TRACESTATE_KEY_VALUE_DELIMITER = ':';
     private static final char TRACESTATE_ENTRY_DELIMITER = ',';
     private static final Pattern TRACESTATE_ENTRY_DELIMITER_SPLIT_PATTERN =
             Pattern.compile("[ \t]*" + TRACESTATE_ENTRY_DELIMITER + "[ \t]*");
@@ -63,7 +61,7 @@ public class B3HeaderContext implements B3Header<SpanContext> {
     }
 
     @Override
-    public <C> void inject(SpanContext spanContext, C carrier, B3Header.Setter<C> setter) {
+    public <C> void inject(SpanContext spanContext, C carrier, B3HeaderFormat.Setter<C> setter) {
         checkNotNull(spanContext, "spanContext");
         checkNotNull(setter, "setter");
         checkNotNull(carrier, "carrier");
@@ -81,9 +79,6 @@ public class B3HeaderContext implements B3Header<SpanContext> {
 
         StringBuilder stringBuilder = new StringBuilder(TRACESTATE_MAX_SIZE);
         for (TraceState.Entry entry : entries) {
-            if (stringBuilder.length() != 0) {
-                stringBuilder.append(TRACESTATE_ENTRY_DELIMITER);
-            }
             stringBuilder
                     .append(entry.getKey())
                     .append(TRACESTATE_KEY_VALUE_DELIMITER)
@@ -124,10 +119,12 @@ public class B3HeaderContext implements B3Header<SpanContext> {
 
         String xB3Flags = getter.get(carrier, X_B3_FLAGS);
         TraceState.Builder traceStateBuilder = TraceState.builder();
-        if (xB3Flags == null || xB3Flags.isEmpty() || xB3Flags == "0")
-            traceStateBuilder.set("debug", "0");
-        else
-            traceStateBuilder.set("debug", "1");
+        if (xB3Flags != null) {
+            if (xB3Flags.isEmpty() || xB3Flags == "0")
+                traceStateBuilder.set("debug", "0");
+            else
+                traceStateBuilder.set("debug", "1");
+        }
         String traceState = getter.get(carrier, TRACE_STATE);
         try {
             if (traceState == null || traceState.isEmpty()) {
@@ -135,6 +132,7 @@ public class B3HeaderContext implements B3Header<SpanContext> {
             }
             String[] listMembers = TRACESTATE_ENTRY_DELIMITER_SPLIT_PATTERN.split(traceState);
             checkArgument(
+
                     listMembers.length <= TRACESTATE_MAX_MEMBERS, "TraceState has too many elements.");
             // Iterate in reverse order because when call builder set the elements is added in the
             // front of the list.

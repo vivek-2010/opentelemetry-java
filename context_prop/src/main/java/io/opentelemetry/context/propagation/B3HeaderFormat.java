@@ -32,7 +32,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * @since 0.1.0
  */
 @ThreadSafe
-public interface B3Header<V> {
+public interface B3HeaderFormat<V> {
     /**
      * The propagation fields defined. If your carrier is reused, you should delete the fields here
      * before calling {@link #inject(Object, Object, Setter)} )}.

@@ -75,6 +75,8 @@ final class TracerShim extends BaseShimObject implements Tracer {
       propagation.injectTextFormat(contextShim, (TextMapInject) carrier);
     } else if (format == Format.Builtin.BINARY) {
       propagation.injectBinaryFormat(contextShim, (Binary) carrier);
+    } else {
+      propagation.injectB3Format(contextShim, , carrier);
     }
   }
 

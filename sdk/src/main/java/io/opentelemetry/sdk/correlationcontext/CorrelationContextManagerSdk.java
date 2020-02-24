@@ -55,4 +55,10 @@ public class CorrelationContextManagerSdk implements CorrelationContextManager {
     // TODO: Implement this.
     return DefaultCorrelationContextManager.getInstance().getHttpTextFormat();
   }
+
+  @Override
+  public B3HeaderFormat<CorrelationContext> getB3Format() {
+    // TODO: Implement this.
+    return DefaultCorrelationContextManager.getInstance().getB3Format();
+  }
 }

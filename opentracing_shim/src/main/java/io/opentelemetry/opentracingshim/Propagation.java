@@ -16,7 +16,7 @@
 
 package io.opentelemetry.opentracingshim;
 
-import io.opentelemetry.context.propagation.B3Header;
+import io.opentelemetry.context.propagation.B3HeaderFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentracing.propagation.Binary;
 import io.opentracing.propagation.TextMapExtract;
@@ -107,7 +107,7 @@ final class Propagation extends BaseShimObject {
     }
   }
 
-  static final class B3TextMapSetter implements B3Header.Setter<TextMapInject> {
+  static final class B3TextMapSetter implements B3HeaderFormat.Setter<TextMapInject> {
     private B3TextMapSetter() {}
 
     public static final B3TextMapSetter INSTANCE = new B3TextMapSetter();
@@ -120,7 +120,7 @@ final class Propagation extends BaseShimObject {
 
   // We use Map<> instead of TextMap as we need to query a specified key, and iterating over
   // *all* values per key-query *might* be a bad idea.
-  static final class B3TextMapGetter implements B3Header.Getter<Map<String, String>> {
+  static final class B3TextMapGetter implements B3HeaderFormat.Getter<Map<String, String>> {
     private B3TextMapGetter() {}
 
     public static final B3TextMapGetter INSTANCE = new B3TextMapGetter();
